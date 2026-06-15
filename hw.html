@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniEcho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue:    #007AFF; --blue-light: #EBF4FF;
+  --green:   #34C759; --green-light: #E8F9EE;
+  --orange:  #FF9500; --orange-light: #FFF3E0;
+  --red:     #FF3B30; --red-light: #FFEEED;
+  --purple:  #AF52DE; --purple-light: #F5EDFD;
+  --indigo:  #5856D6;
+  --bg:      #F2F2F7;
+  --card:    #FFFFFF;
+  --label:   #1C1C1E;
+  --label2:  #636366;
+  --label3:  #8E8E93;
+  --sep:     rgba(60,60,67,0.18);
+  --fill:    rgba(120,120,128,0.12);
+  --r:       16px;
+  --r-sm:    10px;
+  --r-xs:    8px;
+  --sh:      0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
+  --sh-sm:   0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  --app-fs:    17px;
+  --app-fs-sm: 15px;
+  --app-fs-lg: 19px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:-apple-system,'SF Pro Text','Noto Sans TC','PingFang TC',sans-serif;
+  background:linear-gradient(160deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;
+}
+.phone{
+  width:390px;height:844px;background:var(--bg);border-radius:50px;overflow:hidden;
+  position:relative;display:flex;flex-direction:column;flex-shrink:0;
+  box-shadow:0 0 0 10px #1c1c1e,0 0 0 12px #2c2c2e,0 40px 100px rgba(0,0,0,0.6);
+}
+.sb{height:50px;padding:14px 28px 0;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--label);background:var(--bg);flex-shrink:0;position:relative;z-index:20;}
+.di{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:36px;background:#000;border-radius:20px;}
+.si{display:flex;align-items:center;gap:5px;}
+#screens{flex:1;position:relative;overflow:hidden;}
+.sc{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;background:var(--bg);overflow:hidden;
+  transform:translateX(100%);
+  opacity:0;
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+.sc.on{
+  transform:translateX(0) !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  transition:none;
+}
+.sc.animating{
+  transition:transform 0.32s cubic-bezier(0.36,0.07,0.19,0.97),
+             opacity 0.32s ease;
+}
+.sc.slide-left{transform:translateX(-28%);opacity:0.6;}
+.sc.slide-right{transform:translateX(100%);}
+.sc.fade-in{transform:translateX(0);opacity:1;}
+.sc.fade-out{opacity:0;transform:scale(0.97);}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.scroll::-webkit-scrollbar{display:none;}
+.px{padding-left:16px;padding-right:16px;}
+
+/* Bottom nav */
+.bnav{height:82px;background:rgba(242,242,247,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:0.5px solid var(--sep);display:flex;align-items:flex-start;justify-content:space-around;padding-top:8px;flex-shrink:0;}
+.nb{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 18px;border:none;background:none;cursor:pointer;font-family:inherit;min-width:72px;transition:opacity .15s;}
+.nb:active{opacity:.5;}
+.nb span{font-size:10px;font-weight:500;color:var(--label3);}
+.nb svg{stroke:var(--label3);}
+.nb.on span{color:var(--blue);}
+.nb.on svg{stroke:var(--blue);}
+
+/* Buttons */
+.btn{display:block;width:100%;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:600;cursor:pointer;text-align:center;font-family:inherit;transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),opacity .15s ease,background .15s ease;}
+.btn:active{transform:scale(.96);opacity:.88;}
+.btn-p{background:var(--blue);color:#fff;}
+.btn-s{background:var(--fill);color:var(--blue);margin-top:10px;}
+.btn-ghost{background:none;border:none;color:var(--blue);font-size:16px;cursor:pointer;padding:12px;font-family:inherit;width:100%;text-align:center;}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:10px;cursor:pointer;transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),opacity .18s ease,box-shadow .18s ease;}
+.card:active{transform:scale(.97);opacity:.88;box-shadow:var(--sh-sm);}
+
+/* Tap highlight on all clickable rows */
+.row{transition:background .12s;}
+.row:active{background:var(--fill);}
+.nb{transition:opacity .1s,transform .1s;}
+.nb:active{opacity:.5;transform:scale(.92);}
+.hbtn{transition:transform .15s cubic-bezier(0.34,1.56,0.64,1),opacity .15s;}
+.hbtn:active{transform:scale(.97);opacity:.85;}
+
+/* Section */
+.sec-hd{font-size:22px;font-weight:700;color:var(--label);margin:24px 0 12px;}
+.sec-lbl{font-size:13px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.4px;margin:20px 0 8px;}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+.tag-b{background:var(--blue-light);color:var(--blue);}
+.tag-g{background:var(--green-light);color:var(--green);}
+.tag-o{background:var(--orange-light);color:var(--orange);}
+.tag-r{background:var(--red-light);color:var(--red);}
+.tag-gr{background:var(--fill);color:var(--label2);}
+
+/* Chip selectors */
+.chip{display:inline-flex;align-items:center;padding:10px 16px;border-radius:24px;border:1.5px solid var(--sep);font-size:15px;font-weight:500;color:var(--label2);cursor:pointer;background:var(--card);transition:all .2s;margin:4px 3px;}
+.chip.on{background:var(--blue-light);border-color:var(--blue);color:var(--blue);font-weight:600;}
+.chip:active{transform:scale(.96);}
+
+/* Toggle */
+.tog{width:51px;height:31px;background:#e5e5ea;border-radius:16px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--green);}
+.tog::after{content:'';position:absolute;width:27px;height:27px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.25);}
+.tog.on::after{transform:translateX(20px);}
+
+/* Row links */
+.row{display:flex;align-items:center;padding:13px 0;border-bottom:.5px solid var(--sep);cursor:pointer;}
+.row:last-child{border:none;}
+.row-l{font-size:var(--app-fs);color:var(--label);flex:1;}
+.row-v{display:flex;align-items:center;gap:4px;font-size:15px;color:var(--label3);}
+
+/* Onboarding dots */
+.dots{display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:6px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--sep);transition:all .3s;}
+.dot.cur{width:22px;border-radius:4px;background:var(--blue);}
+.dot.done{background:var(--blue);opacity:.4;}
+
+/* Pref selectors */
+.frow{display:flex;gap:8px;}
+.fb{flex:1;padding:14px 8px;border-radius:var(--r-sm);border:1.5px solid var(--sep);background:var(--card);cursor:pointer;text-align:center;font-family:inherit;font-weight:600;color:var(--label3);transition:all .2s;}
+.fb.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.mb{flex:1;padding:14px 6px;border-radius:var(--r-sm);border:1.5px solid var(--sep);background:var(--card);cursor:pointer;text-align:center;font-family:inherit;font-size:14px;font-weight:500;color:var(--label2);display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s;}
+.mb.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.tb{flex:1;padding:12px 4px;border-radius:var(--r-sm);border:1.5px solid var(--sep);background:var(--card);cursor:pointer;text-align:center;font-family:inherit;font-size:13px;font-weight:500;color:var(--label2);line-height:1.4;transition:all .2s;}
+.tb.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+
+/* Nav bar */
+.nav-bar{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(242,242,247,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;}
+.nav-title{font-size:17px;font-weight:600;color:var(--label);}
+.back-btn{display:flex;align-items:center;gap:2px;background:none;border:none;font-size:17px;font-weight:400;color:var(--blue);cursor:pointer;padding:4px;font-family:inherit;}
+
+/* Settings sections */
+.sset{background:var(--card);border-radius:var(--r);box-shadow:var(--sh-sm);padding:0 16px;margin-bottom:8px;}
+.sset-hd{font-size:13px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.4px;padding:12px 0 6px;}
+
+/* Tabs */
+.tabs{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin:0 16px 12px;}
+.tab{flex:1;padding:8px;border-radius:7px;border:none;background:none;font-family:inherit;font-size:15px;font-weight:500;color:var(--label2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;}
+.tab.on{background:var(--card);color:var(--label);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+
+/* Article views */
+.vcard{border-left:3px solid;border-radius:0 var(--r-sm) var(--r-sm) 0;padding:13px 14px;margin-bottom:8px;background:var(--card);box-shadow:var(--sh-sm);}
+.vcard.pro{border-color:var(--green);}
+.vcard.neu{border-color:var(--blue);}
+.vcard.con{border-color:var(--red);}
+.vtype{font-size:11px;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.vcard.pro .vtype{color:var(--green);}
+.vcard.neu .vtype{color:var(--blue);}
+.vcard.con .vtype{color:var(--red);}
+.vtext{font-size:15px;color:var(--label);line-height:1.55;}
+
+/* Pbar */
+.pbar{display:flex;height:5px;border-radius:3px;overflow:hidden;gap:1.5px;margin:10px 0 7px;}
+.pb-g{background:var(--green);border-radius:3px 0 0 3px;}
+.pb-n{background:#d1d1d6;}
+.pb-r{background:var(--red);border-radius:0 3px 3px 0;}
+.pleg{display:flex;gap:10px;}
+.pli{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--label3);}
+.pld{width:7px;height:7px;border-radius:50%;}
+
+/* Audio */
+.audio-box{background:var(--blue-light);border-radius:var(--r);padding:16px;margin:0 16px 12px;}
+.aprog{height:4px;background:rgba(0,122,255,.2);border-radius:2px;margin:12px 0;}
+.apfill{height:100%;width:35%;background:var(--blue);border-radius:2px;}
+.actrl{display:flex;align-items:center;justify-content:space-between;}
+.aplay{width:48px;height:48px;border-radius:50%;background:var(--blue);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.aspd{background:var(--fill);border:none;border-radius:var(--r-xs);padding:6px 10px;font-size:13px;font-weight:600;color:var(--label2);cursor:pointer;font-family:inherit;}
+
+/* Help buttons */
+.hbtn{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--r-sm);padding:14px;margin-bottom:8px;box-shadow:var(--sh-sm);cursor:pointer;transition:all .15s;}
+.hbtn:active{transform:scale(.98);}
+.hico{width:42px;height:42px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.htxt h4{font-size:15px;font-weight:600;color:var(--label);}
+.htxt p{font-size:13px;color:var(--label3);margin-top:2px;}
+.faq{border-bottom:.5px solid var(--sep);cursor:pointer;}
+.faq:last-child{border:none;}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:14px 0;font-size:16px;font-weight:500;color:var(--label);}
+.faq-a{padding:0 0 14px;font-size:15px;color:var(--label2);line-height:1.6;display:none;}
+.faq-a.open{display:block;}
+.farr{transition:transform .2s;flex-shrink:0;}
+
+/* Search */
+.sbox{display:flex;align-items:center;gap:8px;background:rgba(120,120,128,0.12);border-radius:10px;padding:10px 12px;}
+.sbox input{flex:1;border:none;outline:none;font-size:17px;color:var(--label);background:none;font-family:inherit;}
+.sbox input::placeholder{color:var(--label3);}
+
+/* Hot chips */
+.hrow{display:flex;gap:7px;overflow-x:auto;padding:0 16px 4px;scrollbar-width:none;}
+.hrow::-webkit-scrollbar{display:none;}
+.hc{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;background:var(--card);border:.5px solid var(--sep);font-size:14px;font-weight:500;color:var(--label2);white-space:nowrap;box-shadow:var(--sh-sm);cursor:pointer;}
+.hc.hot{background:var(--orange-light);border-color:var(--orange);color:var(--orange);}
+
+/* Profile */
+.prof-card{margin:0 16px 8px;background:linear-gradient(135deg,var(--blue-light),#EEF2FF);border-radius:var(--r);padding:18px;display:flex;align-items:center;gap:14px;box-shadow:var(--sh-sm);}
+.ava{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pi h3{font-size:17px;font-weight:600;color:var(--label);}
+.pi p{font-size:13px;color:var(--label3);margin-top:3px;}
+.pi-tag{display:inline-flex;align-items:center;gap:4px;background:var(--blue-light);color:var(--blue);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;margin-top:6px;}
+
+/* Cat grid */
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:20px;}
+.cbtn{background:var(--card);border-radius:var(--r-sm);padding:14px 8px;text-align:center;cursor:pointer;box-shadow:var(--sh-sm);transition:all .15s;}
+.cbtn:active{transform:scale(.95);}
+.ci{font-size:22px;margin-bottom:6px;}
+.cn{font-size:13px;font-weight:500;color:var(--label);}
+
+.proto-lbl{margin-top:16px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border-radius:12px;padding:10px 18px;color:rgba(255,255,255,.9);font-size:13px;font-weight:500;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- SVG icons sprite -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.125 1.125 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></symbol>
+  <symbol id="i-chevl" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></symbol>
+  <symbol id="i-chevr" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></symbol>
+  <symbol id="i-fire" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"/></symbol>
+  <symbol id="i-text" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></symbol>
+</svg>
+
+<div class="phone">
+  <div class="sb">
+    <span>9:41</span>
+    <div class="di"></div>
+    <div class="si">
+      <svg width="17" height="11" fill="#1C1C1E" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="1"/><rect x="9" y="2" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="#1C1C1E" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="10.5" r="1.2" fill="#1C1C1E" stroke="none"/><path d="M4.5 7.5a5 5 0 017 0"/><path d="M1.5 4.5a9 9 0 0113 0"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="20" height="11" rx="2.5" stroke="#1C1C1E"/><rect x="22" y="3.5" width="2.5" height="5" rx="1" fill="#1C1C1E"/><rect x="2" y="2" width="15" height="8" rx="1.5" fill="#1C1C1E"/></svg>
+    </div>
+  </div>
+
+  <div id="screens">
+
+    <!-- ═══════════════════════════════════
+         ONBOARDING 1
+    ═══════════════════════════════════ -->
+    <div id="sc-ob1" class="sc on">
+      <div class="scroll">
+        <div style="display:flex;flex-direction:column;align-items:center;padding:32px 28px 20px;">
+          <div style="width:92px;height:92px;background:linear-gradient(135deg,#007AFF,#5856D6);border-radius:26px;display:flex;align-items:center;justify-content:center;margin-bottom:22px;box-shadow:0 8px 28px rgba(0,122,255,.32);">
+            <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
+              <circle cx="25" cy="25" r="8" fill="white" opacity=".95"/>
+              <path d="M18 25c0-3.9 3.1-7 7-7" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M32 25c0-3.9-3.1-7-7-7" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M13 25c0-6.6 5.4-12 12-12" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+              <path d="M37 25c0-6.6-5.4-12-12-12" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+              <path d="M8 25C8 15 15 8 25 8" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+              <path d="M42 25C42 15 35 8 25 8" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+            </svg>
+          </div>
+          <div style="font-size:32px;font-weight:800;color:var(--label);letter-spacing:-1px;margin-bottom:8px;">OmniEcho</div>
+          <div style="font-size:16px;color:var(--label2);text-align:center;line-height:1.55;margin-bottom:36px;">你的 AI 資訊夥伴<br>讓資訊服務於你，而非干擾你</div>
+
+          <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:36px;">
+            <div style="display:flex;align-items:center;gap:14px;background:var(--card);border-radius:var(--r-sm);padding:14px 16px;box-shadow:var(--sh-sm);">
+              <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="22" height="22" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-news"/></svg>
+              </div>
+              <div><div style="font-size:15px;font-weight:600;color:var(--label);">整合多元來源</div><div style="font-size:13px;color:var(--label3);margin-top:2px;">新聞、Podcast、學術研究一次掌握</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;background:var(--card);border-radius:var(--r-sm);padding:14px 16px;box-shadow:var(--sh-sm);">
+              <div style="width:40px;height:40px;border-radius:10px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="22" height="22" stroke="var(--purple)" stroke-width="1.5" fill="none"><use href="#i-spark"/></svg>
+              </div>
+              <div><div style="font-size:15px;font-weight:600;color:var(--label);">多元觀點，避免同溫層</div><div style="font-size:13px;color:var(--label3);margin-top:2px;">呈現不同立場，維持資訊視野平衡</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;background:var(--card);border-radius:var(--r-sm);padding:14px 16px;box-shadow:var(--sh-sm);">
+              <div style="width:40px;height:40px;border-radius:10px;background:var(--green-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="22" height="22" stroke="var(--green)" stroke-width="1.5" fill="none"><use href="#i-phone"/></svg>
+              </div>
+              <div><div style="font-size:15px;font-weight:600;color:var(--label);">閱讀或聆聽，自由切換</div><div style="font-size:13px;color:var(--label3);margin-top:2px;">依情境選擇最適合的接收方式</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 24px 36px;">
+        <button class="btn btn-p" onclick="go('ob2')">開始使用</button>
+        <button class="btn-ghost" onclick="startApp()">跳過，直接使用</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         ONBOARDING 2 — 興趣
+    ═══════════════════════════════════ -->
+    <div id="sc-ob2" class="sc">
+      <div style="padding:22px 16px 14px;">
+        <div class="dots"><div class="dot cur"></div><div class="dot"></div></div>
+        <div style="font-size:13px;font-weight:500;color:var(--label3);margin-bottom:6px;">步驟 1／2</div>
+        <div style="font-size:26px;font-weight:700;color:var(--label);">你感興趣的主題是？</div>
+        <div style="font-size:15px;color:var(--label2);margin-top:6px;line-height:1.5;">選擇關心的領域，OmniEcho 將為你量身打造內容</div>
+      </div>
+      <div class="scroll">
+        <div style="padding:8px 13px 20px;display:flex;flex-wrap:wrap;">
+          <div class="chip" onclick="tc(this)">科技與創新</div>
+          <div class="chip" onclick="tc(this)">健康醫療</div>
+          <div class="chip" onclick="tc(this)">財經商業</div>
+          <div class="chip" onclick="tc(this)">文化藝術</div>
+          <div class="chip" onclick="tc(this)">社會議題</div>
+          <div class="chip" onclick="tc(this)">環境永續</div>
+          <div class="chip" onclick="tc(this)">教育學習</div>
+          <div class="chip" onclick="tc(this)">生活風格</div>
+          <div class="chip" onclick="tc(this)">國際時事</div>
+          <div class="chip" onclick="tc(this)">體育娛樂</div>
+          <div class="chip" onclick="tc(this)">政治法律</div>
+          <div class="chip" onclick="tc(this)">科學探索</div>
+        </div>
+      </div>
+      <div style="padding:0 24px 32px;">
+        <button class="btn btn-p" onclick="go('ob3')">下一步</button>
+        <button class="btn-ghost" onclick="go('ob1')">返回</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         ONBOARDING 3 — 顯示偏好
+    ═══════════════════════════════════ -->
+    <div id="sc-ob3" class="sc">
+      <div style="padding:22px 16px 14px;">
+        <div class="dots"><div class="dot done"></div><div class="dot cur"></div></div>
+        <div style="font-size:13px;font-weight:500;color:var(--label3);margin-bottom:6px;">步驟 2／2</div>
+        <div style="font-size:26px;font-weight:700;color:var(--label);">個人化你的閱讀體驗</div>
+        <div style="font-size:15px;color:var(--label2);margin-top:6px;">設定最舒適的顯示方式，隨時可調整</div>
+      </div>
+      <div class="scroll">
+        <div style="padding:8px 16px 20px;">
+          <div style="margin-bottom:22px;">
+            <div style="font-size:16px;font-weight:600;color:var(--label);margin-bottom:10px;">字體大小</div>
+            <div class="frow">
+              <button class="fb fs-btn" data-size="sm" onclick="setFs(this)" style="font-size:14px;">小</button>
+              <button class="fb fs-btn on" data-size="base" onclick="setFs(this)" style="font-size:17px;">中</button>
+              <button class="fb fs-btn" data-size="lg" onclick="setFs(this)" style="font-size:20px;">大</button>
+            </div>
+          </div>
+          <div style="margin-bottom:22px;">
+            <div style="font-size:16px;font-weight:600;color:var(--label);margin-bottom:10px;">偏好閱讀方式</div>
+            <div style="display:flex;gap:8px;">
+              <button class="mb" onclick="sp(this,'m')">
+                <svg width="22" height="22" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-book"/></svg>
+                <span>閱讀文字</span>
+              </button>
+              <button class="mb" onclick="sp(this,'m')">
+                <svg width="22" height="22" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-phone"/></svg>
+                <span>語音播放</span>
+              </button>
+              <button class="mb on" onclick="sp(this,'m')">
+                <svg width="22" height="22" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-sliders"/></svg>
+                <span>兩者皆可</span>
+              </button>
+            </div>
+          </div>
+          <div style="margin-bottom:22px;">
+            <div style="font-size:16px;font-weight:600;color:var(--label);margin-bottom:10px;">晨間摘要時間</div>
+            <div style="display:flex;gap:8px;">
+              <button class="tb" onclick="sp(this,'t')">早上<br>6:00</button>
+              <button class="tb on" onclick="sp(this,'t')">早上<br>7:00</button>
+              <button class="tb" onclick="sp(this,'t')">早上<br>8:00</button>
+              <button class="tb" onclick="sp(this,'t')">早上<br>9:00</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 24px 32px;">
+        <button class="btn btn-p" onclick="startApp()">完成設定，開始使用</button>
+        <button class="btn-ghost" onclick="go('ob2')">返回</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         HOME
+    ═══════════════════════════════════ -->
+    <div id="sc-home" class="sc">
+      <div style="padding:18px 16px 10px;display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div style="font-size:28px;font-weight:700;color:var(--label);">早安</div>
+          <div style="font-size:15px;color:var(--label3);margin-top:1px;">週四，6 月 12 日</div>
+        </div>
+        <button style="width:38px;height:38px;border-radius:50%;background:var(--fill);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:4px;">
+          <svg width="20" height="20" stroke="var(--label)" stroke-width="1.5" fill="none"><use href="#i-bell"/></svg>
+        </button>
+      </div>
+      <div class="scroll">
+        <!-- Morning brief -->
+        <div style="margin:0 16px 14px;background:linear-gradient(135deg,#007AFF 0%,#5856D6 100%);border-radius:20px;padding:20px;transition:transform .15s;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+            <svg width="14" height="14" stroke="rgba(255,255,255,.8)" stroke-width="1.5" fill="none"><use href="#i-mic"/></svg>
+            <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.4px;">今日晨間摘要</span>
+          </div>
+          <div style="font-size:19px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:8px;">AI 治理、台灣選舉民調、氣候峰會⋯ 今日 5 大要聞</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.65);margin-bottom:16px;">5 分鐘 · 3 則主要議題</div>
+          <div id="brief-play-btn" onclick="togglePlay(this,document.getElementById('briefing-text').textContent)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.18);border-radius:22px;padding:9px 16px;border:1px solid rgba(255,255,255,.25);cursor:pointer;">
+            <svg width="13" height="13" fill="white" stroke="white" stroke-width="1"><use href="#i-play"/></svg>
+            <span style="font-size:14px;font-weight:600;color:#fff;">立即播放</span>
+          </div>
+          <div id="briefing-text" style="display:none;">早安，歡迎收聽今日晨間摘要。第一則，人工智慧治理。歐盟 AI 法案本週正式進入執行階段，對高風險 AI 系統設下透明度與安全標準，各大科技公司正積極評估合規成本，台灣業者也密切關注後續影響。第二則，台灣選舉民調。最新民調顯示，距離大選剩不到三個月，各主要政黨支持度差距持續縮小，青年選票成為各陣營主要爭取目標，選情進入膠著狀態。第三則，氣候峰會。本屆聯合國氣候峰會於歐洲開幕，逾百國代表出席，核心議題聚焦於碳排放交易機制與開發中國家的氣候融資方案，預計本週將發表聯合聲明。以上是今日三則重點要聞，感謝收聽。</div>
+        </div>
+
+        <div class="px">
+          <div class="sec-lbl">為你精選</div>
+
+          <div id="featured-news"></div>
+
+          <div class="sec-lbl">今日微學習</div>
+          <div style="background:linear-gradient(135deg,#EBF4FF,#EEF2FF);border-radius:var(--r);padding:16px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <svg width="14" height="14" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-spark"/></svg>
+              <span style="font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.4px;">認知科學小知識</span>
+            </div>
+            <div style="font-size:16px;color:var(--label);line-height:1.65;font-weight:400;">「資訊過載」不只是感覺太多——它會消耗大腦的決策資源，讓人更難做出好判斷。適當篩選資訊是保護認知能量的關鍵。</div>
+          </div>
+          <div style="height:20px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         EXPLORE
+    ═══════════════════════════════════ -->
+    <div id="sc-explore" class="sc">
+      <div style="padding:20px 16px 10px;">
+        <div style="font-size:28px;font-weight:700;color:var(--label);">探索</div>
+      </div>
+      <div class="scroll">
+        <div class="px" style="margin-bottom:12px;">
+          <div class="sbox">
+            <svg width="17" height="17" stroke="var(--label3)" stroke-width="1.5" fill="none"><use href="#i-search"/></svg>
+            <input type="text" placeholder="搜尋主題、關鍵字⋯"/>
+          </div>
+        </div>
+
+        <div style="padding:0 16px 8px;font-size:13px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.4px;">熱門議題</div>
+        <div class="hrow">
+          <div class="hc hot">
+            <svg width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-fire"/></svg>AI 監管
+          </div>
+          <div class="hc hot">
+            <svg width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-fire"/></svg>氣候變遷
+          </div>
+          <div class="hc">高齡照護</div>
+          <div class="hc">半導體</div>
+          <div class="hc">心理健康</div>
+          <div class="hc">再生能源</div>
+        </div>
+
+        <div class="px">
+          <div class="sec-hd" style="font-size:20px;">多元觀點議題</div>
+
+          <div style="background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:10px;cursor:pointer;" onclick="go('article')" onmousedown="this.style.transform='scale(.98)'" onmouseup="this.style.transform=''">
+            <div style="font-size:16px;font-weight:600;color:var(--label);line-height:1.4;margin-bottom:2px;">AI 生成內容是否應該強制標示？</div>
+            <div class="pbar"><div class="pb-g" style="flex:4"></div><div class="pb-n" style="flex:3"></div><div class="pb-r" style="flex:3"></div></div>
+            <div class="pleg">
+              <div class="pli"><div class="pld" style="background:var(--green)"></div>支持 40%</div>
+              <div class="pli"><div class="pld" style="background:#d1d1d6"></div>中立 30%</div>
+              <div class="pli"><div class="pld" style="background:var(--red)"></div>反對 30%</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--label3);">24 篇來源</div>
+            </div>
+          </div>
+
+          <div style="background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:10px;cursor:pointer;" onclick="go('article')" onmousedown="this.style.transform='scale(.98)'" onmouseup="this.style.transform=''">
+            <div style="font-size:16px;font-weight:600;color:var(--label);line-height:1.4;margin-bottom:2px;">遠距工作是否降低員工生產力？</div>
+            <div class="pbar"><div class="pb-g" style="flex:3"></div><div class="pb-n" style="flex:4"></div><div class="pb-r" style="flex:3"></div></div>
+            <div class="pleg">
+              <div class="pli"><div class="pld" style="background:var(--green)"></div>支持 30%</div>
+              <div class="pli"><div class="pld" style="background:#d1d1d6"></div>中立 40%</div>
+              <div class="pli"><div class="pld" style="background:var(--red)"></div>反對 30%</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--label3);">31 篇來源</div>
+            </div>
+          </div>
+
+          <div style="background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:10px;cursor:pointer;" onclick="go('article')" onmousedown="this.style.transform='scale(.98)'" onmouseup="this.style.transform=''">
+            <div style="font-size:16px;font-weight:600;color:var(--label);line-height:1.4;margin-bottom:2px;">核能是否應納入台灣再生能源政策？</div>
+            <div class="pbar"><div class="pb-g" style="flex:5"></div><div class="pb-n" style="flex:2"></div><div class="pb-r" style="flex:3"></div></div>
+            <div class="pleg">
+              <div class="pli"><div class="pld" style="background:var(--green)"></div>支持 50%</div>
+              <div class="pli"><div class="pld" style="background:#d1d1d6"></div>中立 20%</div>
+              <div class="pli"><div class="pld" style="background:var(--red)"></div>反對 30%</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--label3);">18 篇來源</div>
+            </div>
+          </div>
+
+          <div class="sec-hd" style="font-size:20px;">依類別瀏覽</div>
+        </div>
+        <div class="cgrid">
+          <div class="cbtn"><div class="ci">💻</div><div class="cn">科技</div></div>
+          <div class="cbtn"><div class="ci">🩺</div><div class="cn">健康</div></div>
+          <div class="cbtn"><div class="ci">📈</div><div class="cn">財經</div></div>
+          <div class="cbtn"><div class="ci">🌏</div><div class="cn">社會</div></div>
+          <div class="cbtn"><div class="ci">🌿</div><div class="cn">環境</div></div>
+          <div class="cbtn"><div class="ci">🎓</div><div class="cn">教育</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         ARTICLE
+    ═══════════════════════════════════ -->
+    <div id="sc-article" class="sc">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="goBack()">
+          <svg width="20" height="20" stroke="var(--blue)" stroke-width="2" fill="none"><use href="#i-chevl"/></svg>
+          返回
+        </button>
+        <span class="nav-title" style="position:absolute;left:50%;transform:translateX(-50%);font-size:16px;">文章</span>
+        <button style="background:none;border:none;cursor:pointer;padding:4px;">
+          <svg width="20" height="20" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-share"/></svg>
+        </button>
+      </div>
+      <div class="scroll">
+        <div style="padding:8px 16px 12px;">
+          <h2 id="article-title" style="font-size:22px;font-weight:700;color:var(--label);line-height:1.35;margin-bottom:10px;">歐盟 AI 法案正式生效：高風險 AI 系統面臨更嚴格限制</h2>
+          <img id="article-img" src="" alt="" loading="lazy" onerror="this.style.display='none'" style="display:none;width:100%;border-radius:var(--r-sm);margin-bottom:10px;object-fit:cover;max-height:200px;">
+          <div style="background:var(--blue-light);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">AI 整理摘要</div>
+            <div id="article-desc" style="font-size:15px;color:var(--label);line-height:1.6;">暫無摘要</div>
+          </div>
+          <div id="article-content-section" style="display:none;background:var(--card);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:10px;box-shadow:var(--sh-sm);">
+            <div style="font-size:11px;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">完整內容</div>
+            <div id="article-content" style="font-size:15px;color:var(--label2);line-height:1.7;"></div>
+          </div>
+          <div id="article-meta" style="font-size:13px;color:var(--label3);"></div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab on" id="tab-r" onclick="swTab('r')">
+            <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-book"/></svg>閱讀
+          </button>
+          <button class="tab" id="tab-l" onclick="swTab('l')">
+            <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-phone"/></svg>聆聽
+          </button>
+        </div>
+
+        <div id="cont-r">
+          <div id="article-body" style="padding:0 16px;font-size:var(--app-fs);line-height:1.8;color:var(--label);"></div>
+          <div class="px">
+            <div class="sec-lbl">相關文章</div>
+            <div class="card" style="margin-bottom:20px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:12px;font-weight:600;color:var(--blue);">The Reporter</span>
+                <span style="font-size:12px;color:var(--label3);">昨天</span>
+              </div>
+              <div style="font-size:15px;font-weight:600;color:var(--label);line-height:1.45;">台灣如何因應 AI 監管浪潮？產學界看法分歧</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="cont-l" style="display:none;">
+          <div class="audio-box">
+            <div style="font-size:15px;font-weight:600;color:var(--label);display:flex;align-items:center;gap:6px;">
+              <svg width="16" height="16" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-mic"/></svg>
+              AI 語音摘要
+            </div>
+            <div class="aprog"><div class="apfill"></div></div>
+            <div class="actrl">
+              <span style="font-size:13px;color:var(--label3);">1:24 / 4:02</span>
+              <button class="aplay" id="aplay-btn" onclick="togglePlay(this,document.getElementById('transcript-text').textContent)">
+                <svg width="18" height="18" fill="white" stroke="white" stroke-width="1"><use href="#i-play"/></svg>
+              </button>
+              <button class="aspd">1.0×</button>
+            </div>
+          </div>
+          <div class="px">
+            <div style="background:var(--blue-light);border-radius:var(--r);padding:14px;margin-bottom:16px;">
+              <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px;">語音逐字稿</div>
+              <div id="transcript-text" style="font-size:16px;color:var(--label);line-height:1.75;">歐盟 AI 法案今日正式生效，對高風險人工智慧系統設下新的規範。開發商需完成安全評估，建立透明文件，並確保人類能有效監督 AI 的決策過程⋯</div>
+            </div>
+            <div style="height:16px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SETTINGS
+    ═══════════════════════════════════ -->
+    <div id="sc-settings" class="sc">
+      <div style="padding:20px 16px 10px;">
+        <div style="font-size:28px;font-weight:700;color:var(--label);">設定</div>
+      </div>
+      <div class="scroll">
+        <div style="padding-bottom:24px;">
+          <div class="prof-card">
+            <div class="ava">
+              <svg width="28" height="28" stroke="white" stroke-width="1.5" fill="none"><use href="#i-user"/></svg>
+            </div>
+            <div class="pi">
+              <h3>使用者</h3>
+              <p>omniecho@example.com</p>
+              <div class="pi-tag">
+                <svg width="11" height="11" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-shield"/></svg>
+                認知設定檔已建立
+              </div>
+            </div>
+          </div>
+          <div style="height:10px;"></div>
+
+          <div class="sset">
+            <div class="sset-hd">顯示設定</div>
+            <div style="padding:4px 0 6px;">
+              <div style="font-size:16px;font-weight:500;color:var(--label);margin-bottom:10px;">字體大小</div>
+              <div class="frow">
+                <button class="fb fs-btn" data-size="sm" onclick="setFs(this)" style="font-size:14px;">小</button>
+                <button class="fb fs-btn on" data-size="base" onclick="setFs(this)" style="font-size:17px;">中</button>
+                <button class="fb fs-btn" data-size="lg" onclick="setFs(this)" style="font-size:20px;">大</button>
+              </div>
+            </div>
+            <div class="row" style="opacity:.45;pointer-events:none;">
+              <span class="row-l">深色模式 <span style="font-size:12px;color:var(--label3);">即將推出</span></span>
+              <div class="tog"></div>
+            </div>
+          </div>
+          <div style="height:8px;"></div>
+
+          <div class="sset">
+            <div class="sset-hd">通知設定</div>
+            <div class="row">
+              <span class="row-l">晨間摘要時間</span>
+              <span class="row-v">每天 7:00 <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-chevr"/></svg></span>
+            </div>
+            <div class="row" onclick="">
+              <span class="row-l">推播通知</span>
+              <div class="tog on" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+          <div style="height:8px;"></div>
+
+          <div class="sset">
+            <div class="sset-hd">內容偏好</div>
+            <div class="row">
+              <span class="row-l">我的興趣主題</span>
+              <span class="row-v">6 個主題 <svg width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none"><use href="#i-chevr"/></svg></span>
+            </div>
+            <div style="padding:12px 0 16px;">
+              <div style="font-size:16px;font-weight:500;color:var(--label);margin-bottom:10px;">資訊多樣性程度</div>
+              <input type="range" min="1" max="5" value="4" style="width:100%;accent-color:var(--blue);height:4px;cursor:pointer;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--label3);margin-top:6px;"><span>同質性高</span><span>均衡多元</span></div>
+            </div>
+          </div>
+          <div style="height:8px;"></div>
+
+          <div class="sset">
+            <div class="sset-hd">其他</div>
+            <div class="row" onclick="setNav('help');go('help')">
+              <span class="row-l">使用說明</span>
+              <svg width="15" height="15" stroke="var(--label3)" stroke-width="1.5" fill="none"><use href="#i-chevr"/></svg>
+            </div>
+            <div class="row">
+              <span class="row-l">關於 OmniEcho</span>
+              <svg width="15" height="15" stroke="var(--label3)" stroke-width="1.5" fill="none"><use href="#i-chevr"/></svg>
+            </div>
+            <div class="row">
+              <span class="row-l" style="color:var(--red);">登出</span>
+              <svg width="15" height="15" stroke="var(--red)" stroke-width="1.5" fill="none"><use href="#i-chevr"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         HELP
+    ═══════════════════════════════════ -->
+    <div id="sc-help" class="sc">
+      <div style="padding:20px 16px 10px;">
+        <div style="font-size:28px;font-weight:700;color:var(--label);">說明中心</div>
+      </div>
+      <div class="scroll">
+        <div class="px" style="padding-bottom:28px;">
+          <div class="sbox" style="margin-bottom:18px;">
+            <svg width="17" height="17" stroke="var(--label3)" stroke-width="1.5" fill="none"><use href="#i-search"/></svg>
+            <input type="text" placeholder="搜尋問題⋯"/>
+          </div>
+
+          <div class="sec-lbl">快速指南</div>
+
+          <div class="hbtn">
+            <div class="hico"><svg width="20" height="20" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-phone"/></svg></div>
+            <div class="htxt"><h4>如何使用語音功能？</h4><p>在文章頁點選「聆聽」分頁即可</p></div>
+            <svg width="15" height="15" stroke="var(--label3)" stroke-width="1.5" fill="none" style="margin-left:auto;flex-shrink:0;"><use href="#i-chevr"/></svg>
+          </div>
+          <div class="hbtn">
+            <div class="hico"><svg width="20" height="20" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-grid"/></svg></div>
+            <div class="htxt"><h4>如何設定興趣主題？</h4><p>設定 → 內容偏好 → 我的興趣主題</p></div>
+            <svg width="15" height="15" stroke="var(--label3)" stroke-width="1.5" fill="none" style="margin-left:auto;flex-shrink:0;"><use href="#i-chevr"/></svg>
+          </div>
+          <div class="hbtn">
+            <div class="hico"><svg width="20" height="20" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-text"/></svg></div>
+            <div class="htxt"><h4>如何調整字體大小？</h4><p>設定 → 顯示設定 → 字體大小</p></div>
+            <svg width="15" height="15" stroke="var(--label3)" stroke-width="1.5" fill="none" style="margin-left:auto;flex-shrink:0;"><use href="#i-chevr"/></svg>
+          </div>
+          <div class="hbtn">
+            <div class="hico"><svg width="20" height="20" stroke="var(--blue)" stroke-width="1.5" fill="none"><use href="#i-spark"/></svg></div>
+            <div class="htxt"><h4>多元觀點功能是什麼？</h4><p>同一議題呈現支持、中立、反對分析</p></div>
+            <svg width="15" height="15" stroke="var(--label3)" stroke-width="1.5" fill="none" style="margin-left:auto;flex-shrink:0;"><use href="#i-chevr"/></svg>
+          </div>
+
+          <div class="sec-lbl" style="margin-top:20px;">常見問題</div>
+
+          <div style="background:var(--card);border-radius:var(--r);box-shadow:var(--sh-sm);padding:0 16px;margin-bottom:12px;">
+            <div class="faq" onclick="tfaq(this)">
+              <div class="faq-q">OmniEcho 如何保護我的隱私？
+                <svg class="farr" width="17" height="17" stroke="var(--label3)" stroke-width="1.5" fill="none"><use href="#i-chevr" transform="rotate(90,8.5,8.5)"/></svg>
+              </div>
+              <div class="faq-a">我們不會出售您的個人資料。您的認知設定檔僅用於提供個人化內容，可隨時在設定中刪除。</div>
+            </div>
+            <div class="faq" onclick="tfaq(this)">
+              <div class="faq-q">資訊來源如何確保可信度？
+                <svg class="farr" width="17" height="17" stroke="var(--label3)" stroke-width="1.5" fill="none"><use href="#i-chevr" transform="rotate(90,8.5,8.5)"/></svg>
+              </div>
+              <div class="faq-a">系統對每筆資料標記來源類型與可信度評估，並整合多元觀點，避免單一立場主導資訊呈現。</div>
+            </div>
+            <div class="faq" onclick="tfaq(this)">
+              <div class="faq-q">可以關閉晨間摘要通知嗎？
+                <svg class="farr" width="17" height="17" stroke="var(--label3)" stroke-width="1.5" fill="none"><use href="#i-chevr" transform="rotate(90,8.5,8.5)"/></svg>
+              </div>
+              <div class="faq-a">可以。前往設定 → 通知設定，關閉「推播通知」即可。</div>
+            </div>
+          </div>
+
+          <button class="btn btn-p" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;">
+            <svg width="18" height="18" stroke="white" stroke-width="1.5" fill="none"><use href="#i-chat"/></svg>
+            聯絡客服
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- #screens -->
+
+  <nav class="bnav" id="bnav" style="display:none;">
+    <button class="nb on" id="nb-home" onclick="setNav('home');go('home')">
+      <svg width="26" height="26" stroke-width="1.5" fill="none"><use href="#i-home"/></svg>
+      <span>首頁</span>
+    </button>
+    <button class="nb" id="nb-explore" onclick="setNav('explore');go('explore')">
+      <svg width="26" height="26" stroke-width="1.5" fill="none"><use href="#i-search"/></svg>
+      <span>探索</span>
+    </button>
+    <button class="nb" id="nb-settings" onclick="setNav('settings');go('settings')">
+      <svg width="26" height="26" stroke-width="1.5" fill="none"><use href="#i-sliders"/></svg>
+      <span>設定</span>
+    </button>
+    <button class="nb" id="nb-help" onclick="setNav('help');go('help')">
+      <svg width="26" height="26" stroke-width="1.5" fill="none"><use href="#i-help"/></svg>
+      <span>說明</span>
+    </button>
+  </nav>
+</div>
+
+<div class="proto-lbl">OmniEcho 互動原型 · 點擊按鈕切換頁面</div>
+
+<script>
+const MAIN=['home','explore','settings','help'];
+let prev='home';
+let busy=false;
+const DUR=300;
+let selectedTopic='';
+let currentArticle=null;
+
+function animate(curEl,nextEl,type){
+  if(busy)return false;
+  busy=true;
+
+  // Reset all other screens instantly (no flash)
+  document.querySelectorAll('.sc').forEach(s=>{
+    if(s!==curEl&&s!==nextEl){
+      s.classList.remove('on','animating','slide-left','slide-right','fade-in','fade-out');
+      s.style.transition='none';
+      s.style.transform='translateX(100%)';
+      s.style.opacity='0';
+      s.style.pointerEvents='none';
+    }
+  });
+
+  if(type==='tab'){
+    // Fade crossfade
+    nextEl.style.transition='none';
+    nextEl.style.transform='translateX(0)';
+    nextEl.style.opacity='0';
+    nextEl.style.pointerEvents='none';
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        const t=`opacity ${DUR*0.8}ms ease`;
+        nextEl.style.transition=t;
+        curEl.style.transition=t;
+        nextEl.style.opacity='1';
+        nextEl.style.pointerEvents='auto';
+        curEl.style.opacity='0';
+        curEl.style.transform='translateX(0)';
+
+        setTimeout(()=>{
+          curEl.classList.remove('on');
+          curEl.style.cssText='transform:translateX(100%);opacity:0;pointer-events:none;transition:none;';
+          nextEl.classList.add('on');
+          nextEl.style.cssText='';
+          busy=false;
+        },DUR*0.8);
+      });
+    });
+
+  } else if(type==='push'){
+    // New screen slides in from right, current goes left
+    nextEl.style.transition='none';
+    nextEl.style.transform='translateX(100%)';
+    nextEl.style.opacity='1';
+    nextEl.style.pointerEvents='none';
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        const ease='cubic-bezier(0.25,0.46,0.45,0.94)';
+        const t=`transform ${DUR}ms ${ease}, opacity ${DUR}ms ease`;
+        nextEl.style.transition=t;
+        curEl.style.transition=t;
+        nextEl.style.transform='translateX(0)';
+        nextEl.style.opacity='1';
+        nextEl.style.pointerEvents='auto';
+        curEl.style.transform='translateX(-28%)';
+        curEl.style.opacity='0.7';
+
+        setTimeout(()=>{
+          curEl.classList.remove('on');
+          curEl.style.cssText='transform:translateX(-28%);opacity:0;pointer-events:none;transition:none;';
+          nextEl.classList.add('on');
+          nextEl.style.cssText='';
+          busy=false;
+        },DUR);
+      });
+    });
+
+  } else if(type==='pop'){
+    // Current slides to right, previous slides back from left
+    nextEl.style.transition='none';
+    nextEl.style.transform='translateX(-28%)';
+    nextEl.style.opacity='0.7';
+    nextEl.style.pointerEvents='none';
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        const ease='cubic-bezier(0.25,0.46,0.45,0.94)';
+        const t=`transform ${DUR}ms ${ease}, opacity ${DUR}ms ease`;
+        nextEl.style.transition=t;
+        curEl.style.transition=t;
+        nextEl.style.transform='translateX(0)';
+        nextEl.style.opacity='1';
+        nextEl.style.pointerEvents='auto';
+        curEl.style.transform='translateX(100%)';
+        curEl.style.opacity='1';
+
+        setTimeout(()=>{
+          curEl.classList.remove('on');
+          curEl.style.cssText='transform:translateX(100%);opacity:0;pointer-events:none;transition:none;';
+          nextEl.classList.add('on');
+          nextEl.style.cssText='';
+          busy=false;
+        },DUR);
+      });
+    });
+  }
+  return true;
+}
+
+function go(id,dir){
+  stopSpeech();
+  const curEl=document.querySelector('.sc.on');
+  if(!curEl)return;
+  const nextEl=document.getElementById('sc-'+id);
+  if(!nextEl||nextEl===curEl)return;
+
+  const curId=curEl.id.replace('sc-','');
+  if(MAIN.includes(curId))prev=curId;
+
+  // All transitions use fade
+  if(!dir) dir='tab';
+
+  const ok=animate(curEl,nextEl,dir);
+  if(!ok)return;
+
+  const nav=document.getElementById('bnav');
+  nav.style.display=MAIN.includes(id)?'flex':'none';
+
+  const sa=nextEl.querySelector('.scroll');
+  if(sa)sa.scrollTop=0;
+}
+
+function startApp(){
+  stopSpeech();
+  const curEl=document.querySelector('.sc.on');
+  const nextEl=document.getElementById('sc-home');
+  document.getElementById('bnav').style.display='flex';
+  setNav('home');
+  if(curEl&&curEl!==nextEl) animate(curEl,nextEl,'tab');
+  else if(nextEl){nextEl.classList.add('on');nextEl.style.cssText='';}
+  loadNews();
+}
+
+function goBack(){
+  go(prev,'tab');
+  setNav(prev);
+  document.getElementById('bnav').style.display='flex';
+}
+function setNav(id){
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  const b=document.getElementById('nb-'+id);if(b)b.classList.add('on');
+}
+let _spState='idle'; // 'idle'|'playing'|'paused'
+let _spBtn=null;
+let _cachedVoice=null;
+
+function _pickVoice(){
+  const voices=speechSynthesis.getVoices();
+  console.log('Available voices:',voices.map(vx=>vx.name+' ('+vx.lang+')'));
+  const hq=['Premium','Enhanced','高級','加強'];
+  const base=['Mei-Jia','美嘉'];
+  let v=voices.find(vx=>base.some(b=>vx.name.includes(b))&&hq.some(q=>vx.name.includes(q)));
+  if(!v) v=voices.find(vx=>base.some(b=>vx.name.includes(b)));
+  if(!v) v=voices.find(vx=>vx.lang==='zh-TW');
+  if(!v) v=voices.find(vx=>vx.lang.startsWith('zh'));
+  return v||null;
+}
+speechSynthesis.onvoiceschanged=()=>{ _cachedVoice=_pickVoice(); };
+_cachedVoice=_pickVoice();
+
+function _spIcon(btn,playing){
+  const u=btn&&btn.querySelector('use');
+  if(u)u.setAttribute('href',playing?'#i-pause':'#i-play');
+}
+function stopSpeech(){
+  speechSynthesis.cancel();
+  _spIcon(_spBtn,false);
+  _spBtn=null;_spState='idle';
+}
+function _splitSentences(text){
+  return text.split(/([，。！？；])/).reduce((acc,cur,i)=>{
+    if(i%2===0){if(cur.trim())acc.push(cur.trim());}
+    else if(acc.length>0){acc[acc.length-1]+=cur;}
+    return acc;
+  },[]).filter(s=>s.length>0);
+}
+function _startSpeech(btn,text){
+  const segs=_splitSentences(text);
+  if(!segs.length)return;
+  let idx=0;
+  function next(){
+    if(idx>=segs.length){
+      _spIcon(btn,false);_spBtn=null;_spState='idle';return;
+    }
+    const u=new SpeechSynthesisUtterance(segs[idx]);
+    u.lang='zh-TW';u.rate=0.95;u.pitch=1.0;
+    if(_cachedVoice)u.voice=_cachedVoice;
+    if(idx===0)u.onstart=()=>{_spState='playing';_spBtn=btn;_spIcon(btn,true);};
+    u.onend=()=>{if(_spBtn===btn){idx++;next();}};
+    u.onerror=(e)=>{if(e.error!=='canceled'){_spIcon(btn,false);_spBtn=null;_spState='idle';}};
+    speechSynthesis.speak(u);
+  }
+  next();
+}
+function togglePlay(btn,text){
+  if(_spState==='playing'){
+    if(_spBtn===btn){speechSynthesis.pause();_spState='paused';_spIcon(btn,false);}
+    else{stopSpeech();_startSpeech(btn,text);}
+  }else if(_spState==='paused'){
+    if(_spBtn===btn){speechSynthesis.resume();_spState='playing';_spIcon(btn,true);}
+    else{stopSpeech();_startSpeech(btn,text);}
+  }else{
+    _startSpeech(btn,text);
+  }
+}
+function setFontSize(size){
+  const map={sm:'15px',base:'17px',lg:'19px'};
+  document.documentElement.style.setProperty('--app-fs', map[size]||'17px');
+}
+function setFs(el){
+  const size=el.dataset.size;
+  document.querySelectorAll('.fs-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.fs-btn[data-size="'+size+'"]').forEach(b=>b.classList.add('on'));
+  setFontSize(size);
+}
+function tc(el){
+  const wasOn=el.classList.contains('on');
+  document.querySelectorAll('#sc-ob2 .chip').forEach(c=>c.classList.remove('on'));
+  if(!wasOn){el.classList.add('on');selectedTopic=el.textContent.trim();}
+  else{selectedTopic='';}
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function formatDate(str){
+  if(!str)return '';
+  const d=new Date(str);
+  if(isNaN(d))return str;
+  return (d.getMonth()+1)+'月'+d.getDate()+'日';
+}
+
+function renderNewsCard(a){
+  const source=escHtml(a.source||a.sourceName||a.provider||'');
+  const title=escHtml(a.title||'');
+  const date=escHtml(formatDate(a.publishedAt||a.date||a.publishDate||''));
+  const url=a.url||'';
+  return `<div class="card" data-url="${escHtml(url)}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+      <span style="font-size:12px;font-weight:600;color:var(--blue);">${source}</span>
+      <span style="font-size:12px;color:var(--label3);">${date}</span>
+    </div>
+    <div style="font-size:var(--app-fs);font-weight:600;color:var(--label);line-height:1.45;">${title}</div>
+  </div>`;
+}
+
+function renderErrorCard(msg){
+  return `<div class="card" style="border-left:3px solid var(--orange);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:14px;">
+    <div style="font-size:13px;font-weight:600;color:var(--orange);margin-bottom:5px;">無法載入新聞</div>
+    <div style="font-size:15px;color:var(--label2);">${escHtml(msg)}</div>
+  </div>`;
+}
+
+function _toParas(text){
+  return text.split(/([。！？])/).reduce((acc,cur,i)=>{
+    if(i%2===0){if(cur.trim())acc.push(cur.trim());}
+    else if(acc.length>0){acc[acc.length-1]+=cur;}
+    return acc;
+  },[]).filter(s=>s.length>0);
+}
+function openArticle(a){
+  currentArticle=a;
+  document.getElementById('article-title').textContent=a.title||'無標題';
+  document.getElementById('article-desc').textContent=a.description||'暫無摘要';
+
+  const img=document.getElementById('article-img');
+  if(a.image){img.src=a.image;img.style.display='block';}
+  else{img.style.display='none';img.src='';}
+
+  const cs=document.getElementById('article-content-section');
+  const ct=document.getElementById('article-content');
+  if(a.content){cs.style.display='block';ct.textContent=a.content;}
+  else{cs.style.display='none';ct.textContent='';}
+
+  const parts=[];
+  if(a.source) parts.push(`<span style="font-weight:600;color:var(--blue);">${escHtml(a.source)}</span>`);
+  const d=formatDate(a.publishedAt||a.date||'');
+  if(d) parts.push(escHtml(d));
+  if(a.url) parts.push(`<a href="${escHtml(a.url)}" target="_blank" style="color:var(--blue);font-weight:500;">查看原文</a>`);
+  document.getElementById('article-meta').innerHTML=parts.join(' · ');
+
+  const tr=document.getElementById('transcript-text');
+  if(tr) tr.textContent=a.content||a.description||a.title||'';
+
+  const bodyEl=document.getElementById('article-body');
+  if(bodyEl) bodyEl.innerHTML='<p style="color:var(--label3);padding:4px 0;">載入中…</p>';
+
+  swTab('r');
+  go('article');
+  _fetchArticleContent(a);
+}
+
+function _renderFallbackBody(a,bodyEl){
+  if(!bodyEl)return;
+  const bodyText=a.description||'';
+  if(bodyText){
+    const paras=_toParas(bodyText);
+    bodyEl.innerHTML=paras.map((p,i)=>`<p style="margin-bottom:${i===paras.length-1?'20':'16'}px;">${escHtml(p)}</p>`).join('');
+    if(bodyText.includes('...')||bodyText.includes('[+')){
+      bodyEl.innerHTML+=`<p style="font-size:13px;color:var(--label2);margin-bottom:16px;">完整內容請點擊<a href="${escHtml(a.url||'#')}" target="_blank" style="color:var(--blue);">查看原文</a></p>`;
+    }
+  }else{
+    bodyEl.innerHTML=`<p style="color:var(--label3);">此篇文章暫無完整內容，請點擊<a href="${escHtml(a.url||'#')}" target="_blank" style="color:var(--blue);">查看原文</a>。</p>`;
+  }
+}
+
+async function _fetchArticleContent(a){
+  console.log('fetching article content, url:', a.url);
+  const bodyEl=document.getElementById('article-body');
+  try{
+    const res=await fetch('http://localhost:3000/api/article-content?url='+encodeURIComponent(a.url));
+    const data=await res.json();
+    console.log('article content response:', data);
+    if(currentArticle!==a)return;
+    if(data.paragraphs&&data.paragraphs.length>0){
+      if(bodyEl){
+        bodyEl.innerHTML=data.paragraphs.map((p,i)=>`<p style="margin-bottom:${i===data.paragraphs.length-1?'20':'16'}px;">${escHtml(p)}</p>`).join('');
+        const last=data.paragraphs[data.paragraphs.length-1];
+        if(last.includes('...')||last.includes('[+')){
+          bodyEl.innerHTML+=`<p style="font-size:13px;color:var(--label2);margin-bottom:16px;">完整內容請點擊<a href="${escHtml(a.url||'#')}" target="_blank" style="color:var(--blue);">查看原文</a></p>`;
+        }
+      }
+    }else{
+      _renderFallbackBody(a,bodyEl);
+    }
+  }catch(e){
+    console.log('article content fetch error:', e.message);
+    if(currentArticle===a) _renderFallbackBody(a,bodyEl);
+  }
+}
+
+async function loadNews(){
+  const container=document.getElementById('featured-news');
+  if(!container)return;
+  container.innerHTML='<div style="text-align:center;padding:24px;color:var(--label3);font-size:15px;">載入中…</div>';
+  try{
+    const qs=selectedTopic?'?topic='+encodeURIComponent(selectedTopic):'';
+    const res=await fetch('http://localhost:3000/api/news'+qs);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const articles=await res.json();
+    if(!Array.isArray(articles)||!articles.length){
+      container.innerHTML=renderErrorCard('目前沒有相關新聞，請稍後再試。');
+      return;
+    }
+    container.innerHTML=articles.map(renderNewsCard).join('');
+    container.querySelectorAll('.card[data-url]').forEach((card,i)=>{
+      card.addEventListener('click',()=>{
+        console.log('news url:',articles[i].url);
+        openArticle(articles[i]);
+      });
+    });
+  }catch(e){
+    container.innerHTML=renderErrorCard('無法連線至新聞伺服器，請確認後端是否已啟動。');
+  }
+}
+function sp(el,g){el.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function swTab(t){
+  document.getElementById('tab-r').classList.toggle('on',t==='r');
+  document.getElementById('tab-l').classList.toggle('on',t==='l');
+  const show=document.getElementById(t==='r'?'cont-r':'cont-l');
+  const hide=document.getElementById(t==='r'?'cont-l':'cont-r');
+  hide.style.transition='opacity 0.15s ease';
+  hide.style.opacity='0';
+  setTimeout(()=>{
+    hide.style.display='none';
+    hide.style.opacity='';
+    hide.style.transition='';
+    show.style.display='block';
+    show.style.opacity='0';
+    show.style.transition='opacity 0.2s ease';
+    requestAnimationFrame(()=>{ show.style.opacity='1'; });
+    setTimeout(()=>{ show.style.transition=''; show.style.opacity=''; },200);
+  },150);
+}
+function tfaq(item){
+  const a=item.querySelector('.faq-a');
+  const arr=item.querySelector('.farr');
+  a.classList.toggle('open');
+  arr.style.transform=a.classList.contains('open')?'rotate(180deg)':'';
+}
+</script>
+</body>
+</html>
